@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<link href="css/mui.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<!--头部-->
+		<header class="mui-bar mui-bar-nav ydHeader">
+			<div id="logo">
+				<img src="imgs/logo.png" />
+			</div>
+			<div id="searchBut">请输入需要翻译的文本</div>
+		</header>
+
+		<!--底部选项卡-->
+		<nav class="mui-bar mui-bar-tab" id="navFooter">
+			<a class="mui-tab-item mui-active" id="nav1">
+				<span class="mui-icon mui-icon-home"></span>
+				<span class="mui-tab-label">首页</span>
+			</a>
+			<a class="mui-tab-item" id="nav2">
+				<span class="mui-icon mui-icon-compose"></span>
+				<span class="mui-tab-label">词典</span>
+			</a>
+			<a class="mui-tab-item" id="nav3">
+				<span class="mui-icon mui-icon-star"></span>
+				<span class="mui-tab-label">热点</span>
+			</a>
+			<a class="mui-tab-item" id="nav4">
+				<span class="mui-icon mui-icon-gear"></span>
+				<span class="mui-tab-label">我的</span>
+			</a>
+		</nav>
+	</body>
+	<script src="js/mui.min.js"></script>
+	<!--<script src="js/h.js"></script>-->
+	<script type="text/javascript" charset="utf-8">
+		mui.init({
+			statusBarBackground: '#f03844',
+			//添加四个子页面
+			subpages: [{
+				url: 'sub1.html',
+				id: 'sub1.html',
+				styles: {
+					top: '44px',
+					bottom: '44px',
+					width: '100%'
+				}
+			}, {
+				url: 'sub2.html',
+				id: 'sub2.html',
+				styles: {
+					top: '44px',
+					bottom: '44px',
+					width: '100%',
+					left: '100%'
+				}
+			}, {
+				url: 'sub3.html',
+				id: 'sub3.html',
+				styles: {
+					top: '44px',
+					bottom: '44px',
+					width: '100%',
+					left: '200%'
+				}
+			}, {
+				url: 'sub4.html',
+				id: 'sub4.html',
+				styles: {
+					top: '44px',
+					bottom: '44px',
+					width: '100%',
+					left: '300%'
+				}
+			}]
+		});
+
+		document.getElementById('searchBut').addEventListener('tap', function() {
+			changeSub(2);
+			var aa = document.getElementsByTagName('a');
+			for(var i = 0; i < aa.length; i++) {
+				aa[i].classList.remove('mui-active');
+			}
+			document.getElementById("nav2").classList.add("mui-active");
+		});
+
+		//给底部选项卡绑定点击事件，可以切换对应的页面
+		document.getElementById('nav1').addEventListener('tap', function() {
+			changeSub(1);
+		});
+		document.getElementById('nav2').addEventListener('tap', function() {
+			changeSub(2);
+		});
+		document.getElementById('nav3').addEventListener('tap', function() {
+			changeSub(3);
+		});
+		document.getElementById('nav4').addEventListener('tap', function() {
+			//判断登录
+			var uid = plus.storage.getItem('suid');
+			if(uid === null) {
+				wxLogin('changeSub(4);');
+				return false;
+			}
+			changeSub(4);
+		});
+		//窗口切换函数，找到各自对应的规律
+		function changeSub(index) {
+			var sub1 = plus.webview.getWebviewById('sub1.html');
+			var sub2 = plus.webview.getWebviewById('sub2.html');
+			var sub3 = plus.webview.getWebviewById('sub3.html');
+			var sub4 = plus.webview.getWebviewById('sub4.html');
+			sub1.setStyle({
+				left: (1 - index) * 100 + '%'
+			});
+			sub2.setStyle({
+				left: (2 - index) * 100 + '%'
+			});
+			sub3.setStyle({
+				left: (3 - index) * 100 + '%'
+			});
+			sub4.setStyle({
+				left: (4 - index) * 100 + '%'
+			});
+		}
+		/* mui.plusReady(function () {
+		 	plus.storage.removeItem('suid');
+		 });*/
+		mui.plusReady(function() {
+			//推送
+			mui.getJSON(
+				'http"//hoa.hcoder.net/index.php?m=sendMsg',
+				function(res) {
+					var localMsgId = plus.storage.getItem('localMsgId');
+					//如果没有推送过消息
+					if(localMsgIdId == null) {
+						//开始推送消息，并记录下这条推送的id
+						plus.push.createMessage(res.msg, 'LocalMSG', {
+							cover: false
+						});
+						plus.storage.setItem('localMsgId', res.msgId + '');
+					} else {
+						//如果这条消息之前是没有推送过的，则继续推送（后台更改推送id和数据内容即可实现）
+						if(localMsgId != res.msgId) {
+							plus.push.createMessage(res.msg, 'LocalMSG', {
+								cover: false
+							});
+							plus.storage.setItem('localMsgId', res.msgId + '');
+						}
+					}
+				}
+			);
+			
+			//检查版本
+			//设置版本号
+			/*var verson = '1.0';
+			mui.getJSON(
+				'http://hoa.hcoder.net/index.php?m=ver',
+				function (res) {
+					//如果版本号和发送来的不匹配就开始下载
+					if(verson != res.v) {
+						mui.toast('正在更新版本');
+						var dtask = plus.downloader.createDownload(
+							res.src, //地址
+							{method: 'GET'}, //获取方式
+							function (d, status) { //回调函数
+								if(status == 200) { //如果状态是200，则请求成功
+									mui.toast('新版本下载成功，开始安装');
+									plus.runtime.install(d.filename);  
+								}
+							}
+						);
+						dtask.start(); //执行到这里的时候正式开始安装
+					}
+				}
+			);*/
+		});
+	</script>
+
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<link href="css/mui.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<div class="mui-content">
+			<div class="kw">
+				<textarea id="keywords" placeholder="请输入要翻译的文本"></textarea>
+			</div>
+			<div class="sb">
+				<button class="mui-btn" type="button" id="submitBtn">开始翻译</button>
+			</div>
+			<div class="sh">
+				<p></p>
+			</div>
+		</div>
+	</body>
+	<script src="js/mui.min.js"></script>
+	<script type="text/javascript" charset="utf-8">
+		mui.init();
+		var index, self, next, prev;
+		//DOM元素加载完毕
+		mui.ready(function() {
+			document.getElementById('submitBtn').addEventListener('tap', function() {
+				var keywords = document.getElementById('keywords').value;
+				if(keywords.length < 1) {
+					mui.toast('请输入要翻译的文本');
+					return;
+				}
+				//请求接口，获得数据，并渲染到页面中
+				mui.getJSON('http://fanyi.youdao.com/openapi.do?keyfrom=testorot&key=1145972070&type=data&doctype=json&version=1.1&q=' + keywords,
+					function(data) {
+					var shP = document.getElementsByClassName('sh')[0].getElementsByTagName('p')[0];
+					var ht = '';
+					for (var k in data.web) {
+						for (var j in data.web[k]) {
+							ht += data.web[k][j] + '<br>';
+						}
+					}
+					shP.innerHTML = data.translation + '<br>' + ht;
+					shP.parentElement.style.display = 'block';
+					});
+			});
+		});
+		//h5+的api加载完毕
+		mui.plusReady(function() {
+			seft = plus.webview.currentWebview() //当前窗口
+			next = plus.webview.getWebviewById('sub3.html');
+			prev = plus.webview.getWebviewById('sub1.html')
+			index = plus.webview.getLaunchWebview(); //登入窗口，主窗口
+			seft.drag({
+				direction: 'left',
+				moveMode: 'followFinger'
+			}, {
+				view: next,
+				moveMode: 'follow'
+			}, function(e) {
+				if(e.type == 'end' && e.result) {
+					index.evalJS('document.getElementById("nav2").classList.remove("mui-active");document.getElementById("nav3").classList.add("mui-active")');
+				}
+			});
+			seft.drag({
+				direction: 'right',
+				moveMode: 'followFinger'
+			}, {
+				view: prev,
+				moveMode: 'follow'
+			}, function(e) {
+				if(e.type == 'end' && e.result) {
+					index.evalJS('document.getElementById("nav2").classList.remove("mui-active");document.getElementById("nav1").classList.add("mui-active")');
+				}
+			});
+		});
+	</script>
+
+</html>

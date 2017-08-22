@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<link href="css/mui.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav ydHeader">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title" id="title"></h1>
+		</header>
+		<div class="mui-content" id="newContent"></div>
+		<div id="newsFooter">
+			<div id="share">
+				<img src="imgs/share.png" />
+			</div>
+		</div>
+	</body>
+	<script src="js/mui.min.js"></script>
+	<script type="text/javascript">
+		mui.init();
+		var news;
+		mui.plusReady(function() {
+			var self = plus.webview.currentWebview();
+			mui.getJSON(
+				'http://hoa.hcoder.net/index.php?user=hcoder&pwd=hcoder&m=info&id=' + self.newId,
+				function(res) {
+					news = res;
+					document.getElementById('title').innerHTML = res.title;
+					document.getElementById('newContent').innerHTML = res.content;
+				}
+			);
+		});
+		document.getElementById('share').addEventListener('tap', function() {		
+				var actionbuttons = [{
+					title: '微信好友'  //e.index == 1
+				}, {
+					title: '朋友圈'  //e.index == 2
+				}];
+				var actionstyle = {
+					title: '请选择分享类型',
+					cancel: '取消',  //e.index == 0
+					buttons: actionbuttons
+				};
+				plus.nativeUI.actionSheet(actionstyle, function(e) {
+					if(e.index) { //e.index == 0时，这里是false不能进入
+						//console.log(JSON.stringify(e));
+						shareNow(e.index);  //利用函数传递
+					}
+				});
+			});
+			var shareWx = null;
+			function shareNow (type) {   //此时参数type就是传递过来的e.index
+				//plus.share.getServices()有两个参数，第一个是分享成功执行的函数，第二个是分享失败执行的函数
+				plus.share.getServices(function (s) {
+					for (var k in s) {
+						if(s[k].id = 'weixin') {
+							shareWx = s[k];
+						}
+					}
+					//如果shareWx一直是null，代表没有获取到微信分享对象
+					if (shareWx == null) {
+						mui.toast('您没有安装微信');
+						return;
+					}					
+					//此时shareWx.send()，有三个参数，第一个是msg，第二个是成功执行的函数，第三个是失败执行的函数
+					var msg = {
+						content : news.title,   
+						href : 'http://www.hcoder.net/info/id/' + news.id
+					};
+					if (type == 1) {
+						msg.extra = {scene: 'WXSceneSession'}
+					} else {
+						msg.extra = {scene: 'WXSceneTimeline'}
+					}
+					shareWx.send(msg, function () {
+						mui.toast('分享成功');
+					}, function () {
+						mui.toast('您取消了分享');
+					});
+				},function () {  
+					mui.toast('获取分享服务失败');
+				});
+			}
+	</script>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<link href="css/mui.css" rel="stylesheet" />
+	</head>
+
+	<body>
+		<!--主容器-->
+		<div class="mui-content">
+
+			<!--轮播图-->
+			<div class="mui-slider">
+				<!--轮播容器-->
+				<div class="mui-slider-group mui-slider-loop" id="silder1"></div>
+				<!--底部小圆点-->
+				<div class="mui-slider-indicator" id="point"></div>
+			</div>
+
+			<!--新闻列表-->
+			<div id="newsList">
+				<ul id="newsListUl"></ul>
+			</div>
+		</div>
+	</body>
+	<script src="js/mui.min.js"></script>
+	<script src="js/h.js"></script>
+	<script type="text/javascript" charset="utf-8">
+		mui.init();
+		var index, self, next;
+		mui.plusReady(function() {
+			//请求轮播图片地址，并设置轮播结构
+			mui.get(
+				'http://hoa.hcoder.net/index.php?user=hcoder&pwd=hcoder&m=lunbo',
+				function(res) {
+					var items = res.split('--hcSplitor--');
+					var html = '<div class="mui-slider-item"><a href="#">' + items[items.length - 1] + '</a></div>';
+					var points = '';
+					for(var i = 0; i < items.length; i++) {
+						html += '<div class="mui-slider-item"><a href="#">' + items[i] + '</a></div>';
+						points += '<div class="mui-indicator"></div>';
+					}
+					html += '<div class="mui-slider-item"><a href="#">' + items[0] + '</a></div>';
+					document.getElementById('silder1').innerHTML = html;
+					document.getElementById('point').innerHTML = points;
+					//设置轮播间隔
+					var gallery = mui('.mui-slider');
+					gallery.slider({
+						interval: 3000
+					});
+				}
+			);
+			
+			//获取新闻数据
+			mui.get(
+				'http://hoa.hcoder.net/index.php?user=hcoder&pwd=hcoder&m=mediaList&page=1',
+				function(res) {
+					var newsLists = res.split('--hcSplitor--');
+					var html = '';
+					for(var i = 0; i < newsLists.length; i++) {
+						var newItem = newsLists[i].split('--hcListSplitor--');
+						html += '<li><a href="javascript:openInfo(' + newItem[0] + ');"><div class="imgs"><img src="' + newItem[1] + '"/></div><div class="title">' + newItem[2] + '</div></a></li>';
+					}
+					document.getElementById('newsListUl').innerHTML = html;
+				}
+			);
+
+			//获取当前窗口，下个窗口和登入窗口，设置窗口滑动
+			seft = plus.webview.currentWebview(); //当前窗口
+			next = plus.webview.getWebviewById('sub2.html'); //下个窗口
+			index = plus.webview.getLaunchWebview(); //登入窗口，主窗口
+			seft.drag({
+				direction: 'left',
+				moveMode: 'followFinger'
+			}, {
+				view: next,
+				moveMode: 'follow'
+			}, function(e) { //将对应的控制底部切换js代码传入主窗口
+				if(e.type == 'end' && e.result) {
+					index.evalJS('document.getElementById("nav1").classList.remove("mui-active");document.getElementById("nav2").classList.add("mui-active")');
+				}
+			});
+		});
+
+		function openInfo(id) {
+			mui.openWindow({
+				url: 'info.html',
+				id: 'info.html',
+				extras: {
+					newId: id
+				}
+			});
+		}
+	</script>
+
+</html>
